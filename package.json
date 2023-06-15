@@ -1,17 +1,15 @@
 {
   "name": "@dbc-tech/http-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Node.js package for managing HTTP client requests",
   "scripts": {
     "lint": "eslint . --fix",
-    "test": "jest --config ./jest.unit.config.ts",
+    "test": "jest",
     "build": "tsc --build tsconfig.build.json"
   },
   "author": "Deep Blue Company",
   "license": "Apache-2.0",
   "dependencies": {
-    "@automapper/classes": "^8.7.6",
-    "@automapper/core": "^8.7.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "got-cjs": "^12.3.1",
@@ -43,5 +41,10 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dbc-tech/HttpKit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "preset": "ts-jest",
+    "setupFilesAfterEnv": ["./src/setupTests.ts"]  
   }
 }

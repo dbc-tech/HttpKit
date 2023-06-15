@@ -43,9 +43,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dbc-tech/HttpKit"
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/",
-    "access": "restricted"
   }
 }

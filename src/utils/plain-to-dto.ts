@@ -2,7 +2,7 @@ import { plainToInstance } from 'class-transformer';
 
 export type Unpack<T> = T extends Array<infer U> ? U : T;
 
-export type DtoConstructor<T> = new (...args: any[]) => Unpack<T>;
+export type DtoConstructor<T> = new (...args: unknown[]) => Unpack<T>;
 
 export const plainToDto = <T>(
   plain: unknown,

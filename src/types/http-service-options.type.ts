@@ -9,4 +9,4 @@ export type Policies<
 export type HttpServiceOptions<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
   A = any,
-> = ExtendOptions & { policies?: Policies };
+> = ExtendOptions & { policies?: Policies<C, A> };

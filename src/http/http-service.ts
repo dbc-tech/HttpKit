@@ -1,3 +1,4 @@
+import { noop, wrap } from 'cockatiel';
 import got, {
   AfterResponseHook,
   BeforeRequestHook,
@@ -5,7 +6,10 @@ import got, {
   Response,
 } from 'got-cjs';
 import { HttpRequestOptions } from '../types/http-request-options.type';
-import { HttpServiceOptions } from '../types/http-service-options.type';
+import {
+  HttpServiceOptions,
+  Policies,
+} from '../types/http-service-options.type';
 import { HttpServiceResponse } from '../types/http-service-response.type';
 import { DtoConstructor, plainToDto } from '../utils/plain-to-dto';
 
@@ -18,16 +22,22 @@ export class HttpService {
   readonly http: Got;
   readonly defaultHeaders: Record<string, string>;
   private bearerToken: string;
+  readonly policies?: Policies;
+  readonly applyPolicies: <T>(fn: () => Promise<T>) => Promise<T>;
 
   constructor(
     public readonly baseUrl: string,
     public readonly getAuthToken?: GetBearerTokenFn,
     public readonly options?: HttpServiceOptions,
   ) {
+    const { policies = [noop], ...gotOptions } = options || {};
+    this.policies = policies;
+    this.applyPolicies = this.withPolicies(this.policies);
+
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...options?.headers,
+      ...gotOptions?.headers,
     };
 
     const beforeRequest: BeforeRequestHook[] = this.getAuthToken
@@ -65,7 +75,7 @@ export class HttpService {
       : [];
 
     this.http = got.extend({
-      ...options,
+      ...gotOptions,
       mutableDefaults: true,
       headers: this.defaultHeaders,
       responseType: 'json',
@@ -81,7 +91,7 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.http.get<T>(url, options);
+    const res = await this.applyPolicies(() => this.http.get<T>(url, options));
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -91,10 +101,12 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.http.post<T>(url, {
-      ...options,
-      json,
-    });
+    const res = await this.applyPolicies(() =>
+      this.http.post<T>(url, {
+        ...options,
+        json,
+      }),
+    );
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -104,10 +116,12 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.http.put<T>(url, {
-      ...options,
-      json,
-    });
+    const res = await this.applyPolicies(() =>
+      this.http.put<T>(url, {
+        ...options,
+        json,
+      }),
+    );
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -116,7 +130,9 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.http.delete<T>(url, options);
+    const res = await this.applyPolicies(() =>
+      this.http.delete<T>(url, options),
+    );
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -132,5 +148,10 @@ export class HttpService {
 
   urlFromPath(path: string): URL {
     return new URL(path, this.baseUrl);
+  }
+
+  withPolicies<T>(policies: Policies) {
+    return (method: () => Promise<HttpServiceResponse<T>>) =>
+      wrap(...policies).execute(method);
   }
 }

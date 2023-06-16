@@ -1,5 +1,7 @@
 import { Type } from 'class-transformer';
+import { ExponentialBackoff, handleAll, retry } from 'cockatiel';
 import nock from 'nock';
+import { HttpServiceOptions } from '../types';
 import { HttpService } from './http-service';
 
 describe('HttpService', () => {
@@ -272,6 +274,49 @@ describe('HttpService', () => {
       expect(gotPut).toHaveBeenCalledTimes(1);
       expect(gotDelete).toHaveBeenCalledTimes(1);
       expect(getAuthToken).toHaveBeenCalledTimes(4);
+    });
+  });
+
+  describe('support cockatiel policies', () => {
+    it('should retry the request if a retry policy provided', async () => {
+      const retryPolicy = retry(handleAll, {
+        maxAttempts: 3,
+        backoff: new ExponentialBackoff(),
+      });
+
+      const retryFailure = jest.fn();
+      const retrySuccess = jest.fn();
+      retryPolicy.onFailure(retryFailure);
+      retryPolicy.onSuccess(retrySuccess);
+
+      const options: HttpServiceOptions = {
+        policies: [retryPolicy],
+      };
+
+      const baseUrl = 'https://icanhazdadjoke.com/';
+      const path = 'slack';
+
+      const getResponse = { tag: 1234567 };
+      nock(baseUrl)
+        .get(`/${path}`)
+        .reply(400, getResponse)
+        .get(`/${path}`)
+        .reply(400, getResponse)
+        .get(`/${path}`)
+        .reply(200, getResponse);
+
+      const httpService = new HttpService(baseUrl, null, options);
+      const gotGet = jest.spyOn(httpService.http, 'get');
+      const url = new URL(path, baseUrl);
+      const response = await httpService.getJson(url);
+
+      expect(gotGet).toHaveBeenCalledTimes(3);
+      expect(retryFailure).toHaveBeenCalledTimes(2);
+      expect(retrySuccess).toHaveBeenCalledTimes(1);
+
+      expect(gotGet).toHaveBeenCalledWith(url, undefined);
+      expect(response.data).toEqual({ tag: 1234567 });
+      expect(response.statusCode).toBe(200);
     });
   });
 });

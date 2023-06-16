@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
+    "cockatiel": "^3.1.1",
     "got-cjs": "^12.3.1",
     "reflect-metadata": "^0.1.13"
   },

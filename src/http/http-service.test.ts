@@ -318,7 +318,7 @@ describe('HttpService', () => {
       expect(response.data).toEqual({ tag: 1234567 });
       expect(response.statusCode).toBe(200);
     });
-    it.only('should retry the request if a retry policy is provided via HttpRequestOptions', async () => {
+    it('should retry the request if a retry policy is provided via HttpRequestOptions', async () => {
       const retryPolicy = retry(handleAll, {
         maxAttempts: 3,
         backoff: new ExponentialBackoff(),

@@ -87,7 +87,7 @@ export class HttpService {
 
   async postJson<T>(
     url: URL,
-    json?: Record<string, any>,
+    json?: Record<string, unknown>,
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
@@ -100,7 +100,7 @@ export class HttpService {
 
   async putJson<T>(
     url: URL,
-    json?: Record<string, any>,
+    json?: Record<string, unknown>,
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {

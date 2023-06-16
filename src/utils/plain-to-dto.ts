@@ -2,11 +2,11 @@ import { plainToInstance } from 'class-transformer';
 
 export type Unpack<T> = T extends Array<infer U> ? U : T;
 
-export type DtoConstructor<T> = new (...args: unknown[]) => Unpack<T>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DtoConstructor<T> = new (...args: any[]) => Unpack<T>;
 
 export const plainToDto = <T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  plain: any,
+  plain: unknown,
   dtoConstructor?: DtoConstructor<T>,
 ) => {
   const canTransform = dtoConstructor != null && plain != null;

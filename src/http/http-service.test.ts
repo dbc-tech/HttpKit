@@ -290,7 +290,7 @@ describe('HttpService', () => {
       retryPolicy.onSuccess(retrySuccess);
 
       const options: HttpServiceOptions = {
-        policies: [retryPolicy],
+        resiliencePolicy: retryPolicy,
       };
 
       const baseUrl = 'https://icanhazdadjoke.com/';

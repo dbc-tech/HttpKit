@@ -1,4 +1,4 @@
-import { noop, wrap } from 'cockatiel';
+import { noop } from 'cockatiel';
 import got, {
   AfterResponseHook,
   BeforeRequestHook,
@@ -8,7 +8,7 @@ import got, {
 import { HttpRequestOptions } from '../types/http-request-options.type';
 import {
   HttpServiceOptions,
-  Policies,
+  ResiliencePolicy,
 } from '../types/http-service-options.type';
 import { HttpServiceResponse } from '../types/http-service-response.type';
 import { DtoConstructor, plainToDto } from '../utils/plain-to-dto';
@@ -22,17 +22,15 @@ export class HttpService {
   readonly http: Got;
   readonly defaultHeaders: Record<string, string>;
   private bearerToken: string;
-  readonly policies?: Policies;
-  readonly applyPolicies: <T>(fn: () => Promise<T>) => Promise<T>;
+  readonly resiliencePolicy?: ResiliencePolicy;
 
   constructor(
     public readonly baseUrl: string,
     public readonly getAuthToken?: GetBearerTokenFn,
     public readonly options?: HttpServiceOptions,
   ) {
-    const { policies = [noop], ...gotOptions } = options || {};
-    this.policies = policies;
-    this.applyPolicies = this.withPolicies(this.policies);
+    const { resiliencePolicy = noop, ...gotOptions } = options || {};
+    this.resiliencePolicy = resiliencePolicy;
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -91,7 +89,8 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.applyPolicies(() => this.http.get<T>(url, options));
+    const { policy, gotOptions } = this.parseOptions(options);
+    const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -101,9 +100,10 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.applyPolicies(() =>
+    const { policy, gotOptions } = this.parseOptions(options);
+    const res = await policy.execute(() =>
       this.http.post<T>(url, {
-        ...options,
+        ...gotOptions,
         json,
       }),
     );
@@ -116,9 +116,10 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.applyPolicies(() =>
+    const { policy, gotOptions } = this.parseOptions(options);
+    const res = await policy.execute(() =>
       this.http.put<T>(url, {
-        ...options,
+        ...gotOptions,
         json,
       }),
     );
@@ -130,8 +131,9 @@ export class HttpService {
     dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
-    const res = await this.applyPolicies(() =>
-      this.http.delete<T>(url, options),
+    const { policy, gotOptions } = this.parseOptions(options);
+    const res = await policy.execute(() =>
+      this.http.delete<T>(url, gotOptions),
     );
     return this.makeResponse<T>(res, dtoConstructor);
   }
@@ -150,8 +152,10 @@ export class HttpService {
     return new URL(path, this.baseUrl);
   }
 
-  withPolicies<T>(policies: Policies) {
-    return (method: () => Promise<HttpServiceResponse<T>>) =>
-      wrap(...policies).execute(method);
+  parseOptions(options?: HttpRequestOptions) {
+    if (!options) return { policy: this.resiliencePolicy };
+
+    const { resiliencePolicy, ...gotOptions } = options;
+    return { policy: resiliencePolicy ?? this.resiliencePolicy, gotOptions };
   }
 }

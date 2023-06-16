@@ -155,7 +155,11 @@ export class HttpService {
   parseOptions(options?: HttpRequestOptions) {
     if (!options) return { policy: this.resiliencePolicy };
 
-    const { resiliencePolicy, ...gotOptions } = options;
-    return { policy: resiliencePolicy ?? this.resiliencePolicy, gotOptions };
+    const { resiliencePolicy, ...rest } = options;
+
+    return {
+      policy: resiliencePolicy ?? this.resiliencePolicy,
+      gotOptions: Object.keys(rest).length ? rest : undefined,
+    };
   }
 }

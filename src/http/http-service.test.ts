@@ -318,5 +318,43 @@ describe('HttpService', () => {
       expect(response.data).toEqual({ tag: 1234567 });
       expect(response.statusCode).toBe(200);
     });
+    it.only('should retry the request if a retry policy is provided via HttpRequestOptions', async () => {
+      const retryPolicy = retry(handleAll, {
+        maxAttempts: 3,
+        backoff: new ExponentialBackoff(),
+      });
+
+      const retryFailure = jest.fn();
+      const retrySuccess = jest.fn();
+      retryPolicy.onFailure(retryFailure);
+      retryPolicy.onSuccess(retrySuccess);
+
+      const baseUrl = 'https://icanhazdadjoke.com/';
+      const path = 'slack';
+
+      const getResponse = { tag: 1234567 };
+      nock(baseUrl)
+        .get(`/${path}`)
+        .reply(400, getResponse)
+        .get(`/${path}`)
+        .reply(400, getResponse)
+        .get(`/${path}`)
+        .reply(200, getResponse);
+
+      const httpService = new HttpService(baseUrl);
+      const gotGet = jest.spyOn(httpService.http, 'get');
+      const url = new URL(path, baseUrl);
+      const response = await httpService.getJson(url, undefined, {
+        resiliencePolicy: retryPolicy,
+      });
+
+      expect(gotGet).toHaveBeenCalledTimes(3);
+      expect(retryFailure).toHaveBeenCalledTimes(2);
+      expect(retrySuccess).toHaveBeenCalledTimes(1);
+
+      expect(gotGet).toHaveBeenCalledWith(url, undefined);
+      expect(response.data).toEqual({ tag: 1234567 });
+      expect(response.statusCode).toBe(200);
+    });
   });
 });

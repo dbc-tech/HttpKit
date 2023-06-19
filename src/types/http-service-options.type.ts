@@ -1,6 +1,7 @@
 import { IDefaultPolicyContext, type IPolicy } from 'cockatiel';
 import { ExtendOptions } from 'got-cjs';
 import { Logger } from 'winston';
+import { WinstonLoggerOptions } from '../utils';
 
 export type ResiliencePolicy<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
@@ -13,10 +14,7 @@ export type ResiliencePolicyLoggingOptions = {
   failure?: boolean;
 };
 
-export type DefaultLoggerOptions = {
-  level?: string;
-  meta?: Record<string, unknown>;
-};
+export type DefaultLoggerOptions = WinstonLoggerOptions;
 
 export type HttpServiceOptions<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,

@@ -1,0 +1,95 @@
+{
+  "level": "error",
+  "message": {
+    "duration": 4.766415953636169,
+    "handled": true,
+    "reason": {
+      "error": {
+        "code": "ERR_NON_2XX_3XX_RESPONSE",
+        "name": "HTTPError",
+        "options": {
+          "agent": {},
+          "allowGetBody": false,
+          "cacheOptions": {},
+          "context": {},
+          "decompress": true,
+          "enableUnixSockets": true,
+          "followRedirect": true,
+          "headers": {
+            "accept": "application/json",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "application/json",
+            "user-agent": "got (https://github.com/sindresorhus/got)"
+          },
+          "hooks": {
+            "afterResponse": [],
+            "beforeError": [],
+            "beforeRedirect": [],
+            "beforeRequest": [],
+            "beforeRetry": [],
+            "init": []
+          },
+          "http2": false,
+          "https": {},
+          "ignoreInvalidCookies": false,
+          "isStream": false,
+          "maxRedirects": 10,
+          "method": "GET",
+          "methodRewriting": false,
+          "pagination": {
+            "backoff": 0,
+            "countLimit": null,
+            "requestLimit": 10000,
+            "stackAllItems": false
+          },
+          "password": "",
+          "prefixUrl": "",
+          "resolveBodyOnly": false,
+          "responseType": "json",
+          "retry": {
+            "backoffLimit": null,
+            "errorCodes": [
+              "ETIMEDOUT",
+              "ECONNRESET",
+              "EADDRINUSE",
+              "ECONNREFUSED",
+              "EPIPE",
+              "ENOTFOUND",
+              "ENETUNREACH",
+              "EAI_AGAIN"
+            ],
+            "limit": 2,
+            "methods": ["GET", "PUT", "HEAD", "DELETE", "OPTIONS", "TRACE"],
+            "noise": 100,
+            "statusCodes": [408, 413, 429, 500, 502, 503, 504, 521, 522, 524]
+          },
+          "setHost": true,
+          "throwHttpErrors": true,
+          "timeout": {},
+          "url": "https://icanhazdadjoke.com/slack",
+          "username": ""
+        },
+        "timings": {
+          "connect": 1687148641167,
+          "end": 1687148641171,
+          "lookup": 1687148641167,
+          "phases": {
+            "dns": 0,
+            "download": 2,
+            "firstByte": 2,
+            "request": 0,
+            "tcp": 0,
+            "tls": 0,
+            "total": 4,
+            "wait": 0
+          },
+          "response": 1687148641169,
+          "secureConnect": 1687148641167,
+          "socket": 1687148641167,
+          "start": 1687148641167,
+          "upload": 1687148641167
+        }
+      }
+    }
+  }
+}

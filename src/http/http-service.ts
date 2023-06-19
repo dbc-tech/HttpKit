@@ -5,12 +5,15 @@ import got, {
   Got,
   Response,
 } from 'got-cjs';
+import { Logger } from 'winston';
 import { HttpRequestOptions } from '../types/http-request-options.type';
 import {
   HttpServiceOptions,
   ResiliencePolicy,
+  ResiliencePolicyLoggingOptions,
 } from '../types/http-service-options.type';
 import { HttpServiceResponse } from '../types/http-service-response.type';
+import { getWinstonLogger } from '../utils';
 import { DtoConstructor, plainToDto } from '../utils/plain-to-dto';
 
 export type GetBearerTokenFn = () => Promise<string>;
@@ -23,14 +26,31 @@ export class HttpService {
   readonly defaultHeaders: Record<string, string>;
   private bearerToken: string;
   readonly resiliencePolicy?: ResiliencePolicy;
+  readonly logger: Logger;
+  readonly resiliencePolicyLoggingOptions: ResiliencePolicyLoggingOptions;
 
   constructor(
     public readonly baseUrl: string,
     public readonly getAuthToken?: GetBearerTokenFn,
     public readonly options?: HttpServiceOptions,
   ) {
-    const { resiliencePolicy = noop, ...gotOptions } = options || {};
+    const {
+      resiliencePolicy = noop,
+      logger,
+      defaultLoggerOptions = {
+        level: 'info',
+        meta: { service: 'http-service' },
+      },
+      resiliencePolicyLoggingOptions = {
+        success: false,
+        failure: false,
+      },
+      ...gotOptions
+    } = options || {};
+
     this.resiliencePolicy = resiliencePolicy;
+    this.resiliencePolicyLoggingOptions = resiliencePolicyLoggingOptions;
+    this.logger = logger ? logger : getWinstonLogger(defaultLoggerOptions);
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -44,10 +64,13 @@ export class HttpService {
             if (!this.getAuthToken) return;
 
             if (!this.bearerToken) {
+              this.logger.info('Getting the auth token...');
               this.bearerToken = await this.getAuthToken();
             }
 
             options.headers.Authorization = `Bearer ${this.bearerToken}`;
+
+            this.logger.info('Auth token set in the request headers.');
           },
         ]
       : [];
@@ -56,6 +79,8 @@ export class HttpService {
       ? [
           async (response, retryWithMergedOptions) => {
             if (response.statusCode === 401) {
+              this.logger.info('Auth token expired. Getting a new one...');
+
               this.bearerToken = await this.getAuthToken();
 
               const updatedOptions = {
@@ -63,6 +88,8 @@ export class HttpService {
                   Authorization: `Bearer ${this.bearerToken}`,
                 },
               };
+
+              this.logger.info('Retrying the request with the new token.');
 
               return retryWithMergedOptions(updatedOptions);
             }
@@ -90,7 +117,11 @@ export class HttpService {
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
+
+    this.logger.info({ method: 'getJson', url });
+
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
+
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -102,12 +133,16 @@ export class HttpService {
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
+
+    this.logger.info({ method: 'postJson', url, json });
+
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
         ...gotOptions,
         json,
       }),
     );
+
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -119,12 +154,16 @@ export class HttpService {
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
+
+    this.logger.info({ method: 'putJson', url, json });
+
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
         ...gotOptions,
         json,
       }),
     );
+
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -134,9 +173,13 @@ export class HttpService {
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
+
+    this.logger.info({ method: 'deleteJson', url });
+
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),
     );
+
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
@@ -158,10 +201,27 @@ export class HttpService {
     if (!options) return { policy: this.resiliencePolicy };
 
     const { resiliencePolicy, ...rest } = options;
+    const policy = resiliencePolicy ?? this.resiliencePolicy;
 
-    return {
-      policy: resiliencePolicy ?? this.resiliencePolicy,
-      gotOptions: Object.keys(rest).length ? rest : undefined,
-    };
+    if (this.resiliencePolicyLoggingOptions) {
+      const { success, failure } = this.resiliencePolicyLoggingOptions;
+
+      if (success)
+        policy.onSuccess((data) =>
+          this.logger.info({ ...data, _source: 'resilience-policy-onSuccess' }),
+        );
+
+      if (failure)
+        policy.onFailure((data) =>
+          this.logger.error({
+            ...data,
+            _source: 'resilience-policy-onFailure',
+          }),
+        );
+    }
+
+    const gotOptions = Object.keys(rest).length ? rest : undefined;
+
+    return { policy, gotOptions };
   }
 }

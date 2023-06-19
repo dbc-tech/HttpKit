@@ -4,6 +4,7 @@ import { Logger } from 'winston';
 
 export type ResiliencePolicy<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   A = any,
 > = IPolicy<C, A>;
 
@@ -19,6 +20,7 @@ export type DefaultLoggerOptions = {
 
 export type HttpServiceOptions<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   A = any,
 > = ExtendOptions & {
   resiliencePolicy?: ResiliencePolicy<C, A>;

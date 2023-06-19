@@ -43,7 +43,7 @@ export class HttpService {
       },
       resiliencePolicyLoggingOptions = {
         success: false,
-        failure: false,
+        failure: true,
       },
       ...gotOptions
     } = options || {};

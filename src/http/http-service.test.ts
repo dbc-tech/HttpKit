@@ -357,7 +357,7 @@ describe('HttpService', () => {
       expect(response.statusCode).toBe(200);
     });
 
-    it.only('exceptions', async () => {
+    it('exceptions', async () => {
       const retryPolicy = retry(handleAll, {
         maxAttempts: 3,
         backoff: new ExponentialBackoff(),

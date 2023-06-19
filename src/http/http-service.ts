@@ -38,7 +38,7 @@ export class HttpService {
       resiliencePolicy = noop,
       logger,
       defaultLoggerOptions = {
-        level: 'info',
+        level: 'debug',
         meta: { service: 'http-service' },
       },
       resiliencePolicyLoggingOptions = {
@@ -64,13 +64,13 @@ export class HttpService {
             if (!this.getAuthToken) return;
 
             if (!this.bearerToken) {
-              this.logger.info('Getting the auth token...');
+              this.logger.debug('Getting the auth token...');
               this.bearerToken = await this.getAuthToken();
             }
 
             options.headers.Authorization = `Bearer ${this.bearerToken}`;
 
-            this.logger.info('Auth token set in the request headers.');
+            this.logger.debug('Auth token set in the request headers.');
           },
         ]
       : [];
@@ -79,7 +79,7 @@ export class HttpService {
       ? [
           async (response, retryWithMergedOptions) => {
             if (response.statusCode === 401) {
-              this.logger.info('Auth token expired. Getting a new one...');
+              this.logger.debug('Auth token expired. Getting a new one...');
 
               this.bearerToken = await this.getAuthToken();
 
@@ -89,7 +89,7 @@ export class HttpService {
                 },
               };
 
-              this.logger.info('Retrying the request with the new token.');
+              this.logger.debug('Retrying the request with the new token.');
 
               return retryWithMergedOptions(updatedOptions);
             }
@@ -118,7 +118,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.info({ method: 'getJson', url });
+    this.logger.debug({ method: 'getJson', url });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
 
@@ -134,7 +134,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.info({ method: 'postJson', url, json });
+    this.logger.debug({ method: 'postJson', url, json });
 
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
@@ -155,7 +155,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.info({ method: 'putJson', url, json });
+    this.logger.debug({ method: 'putJson', url, json });
 
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
@@ -174,7 +174,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.info({ method: 'deleteJson', url });
+    this.logger.debug({ method: 'deleteJson', url });
 
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),
@@ -208,12 +208,15 @@ export class HttpService {
 
       if (success)
         policy.onSuccess((data) =>
-          this.logger.info({ ...data, _source: 'resilience-policy-onSuccess' }),
+          this.logger.debug({
+            ...data,
+            _source: 'resilience-policy-onSuccess',
+          }),
         );
 
       if (failure)
         policy.onFailure((data) =>
-          this.logger.error({
+          this.logger.warn({
             ...data,
             _source: 'resilience-policy-onFailure',
           }),

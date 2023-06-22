@@ -47,7 +47,10 @@ export class HttpService {
 
     this.resiliencePolicy = resiliencePolicy;
     this.resiliencePolicyLoggingOptions = resiliencePolicyLoggingOptions;
-    this.logger = logger ? logger : getWinstonLogger(defaultLoggerOptions);
+    const winstonLogger = logger
+      ? logger
+      : getWinstonLogger(defaultLoggerOptions);
+    this.logger = winstonLogger.child({ context: 'http-service' });
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',

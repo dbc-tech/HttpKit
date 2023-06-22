@@ -37,10 +37,7 @@ export class HttpService {
     const {
       resiliencePolicy = noop,
       logger,
-      defaultLoggerOptions = {
-        level: 'debug',
-        meta: { service: 'http-service' },
-      },
+      defaultLoggerOptions,
       resiliencePolicyLoggingOptions = {
         success: false,
         failure: true,

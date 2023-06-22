@@ -9,17 +9,12 @@ export type WinstonLoggerOptions = {
 
 export function getWinstonLogger(options?: WinstonLoggerOptions) {
   const level = options?.level || 'info';
-  const defaultMeta = options?.meta || { service: 'http-service' };
+  const defaultMeta = options?.meta || { context: 'http-service' };
   const extraTransports = options?.extraTransports || [];
 
   const logger = winston.createLogger({
     level,
     defaultMeta,
-    format: winston.format.combine(
-      winston.format.errors({ stack: true }),
-      winston.format.metadata(),
-      winston.format.json(),
-    ),
     transports: [new winston.transports.Console(), ...extraTransports],
   });
 

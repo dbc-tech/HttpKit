@@ -37,10 +37,7 @@ export class HttpService {
     const {
       resiliencePolicy = noop,
       logger,
-      defaultLoggerOptions = {
-        level: 'debug',
-        meta: { service: 'http-service' },
-      },
+      defaultLoggerOptions,
       resiliencePolicyLoggingOptions = {
         success: false,
         failure: true,
@@ -50,7 +47,10 @@ export class HttpService {
 
     this.resiliencePolicy = resiliencePolicy;
     this.resiliencePolicyLoggingOptions = resiliencePolicyLoggingOptions;
-    this.logger = logger ? logger : getWinstonLogger(defaultLoggerOptions);
+    const winstonLogger = logger
+      ? logger
+      : getWinstonLogger(defaultLoggerOptions);
+    this.logger = winstonLogger.child({ context: 'http-service' });
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -118,7 +118,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'getJson', url });
+    this.logger.debug({ method: 'getJson', url, gotOptions });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
 
@@ -134,7 +134,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'postJson', url, json });
+    this.logger.debug({ method: 'postJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
@@ -155,7 +155,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'putJson', url, json });
+    this.logger.debug({ method: 'putJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
@@ -174,7 +174,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'deleteJson', url });
+    this.logger.debug({ method: 'deleteJson', url, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),

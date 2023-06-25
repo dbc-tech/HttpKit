@@ -25,4 +25,6 @@ export type HttpServiceOptions<
   logger?: Logger;
   defaultLoggerOptions?: DefaultLoggerOptions;
   resiliencePolicyLoggingOptions?: ResiliencePolicyLoggingOptions;
+  hideProperties?: string[];
+  maskProperties?: string[];
 };

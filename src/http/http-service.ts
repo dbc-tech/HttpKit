@@ -15,11 +15,12 @@ import {
 import { HttpServiceResponse } from '../types/http-service-response.type';
 import { getWinstonLogger } from '../utils';
 import { DtoConstructor, plainToDto } from '../utils/plain-to-dto';
+import { maskObject } from '../utils/mask-object';
 
 export type GetBearerTokenFn = () => Promise<string>;
 
 /**
- * HttpService is a wrapper for the got library to parse responses APIs.
+ * HttpService is a wrapper for the got library to parse API responses.
  */
 export class HttpService {
   readonly http: Got;
@@ -118,7 +119,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'getJson', url, gotOptions });
+    this.maskedLog({ method: 'getJson', url, gotOptions });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
 
@@ -134,7 +135,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'postJson', url, json, gotOptions });
+    this.maskedLog({ method: 'postJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
@@ -155,7 +156,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'putJson', url, json, gotOptions });
+    this.maskedLog({ method: 'putJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
@@ -174,7 +175,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.logger.debug({ method: 'deleteJson', url, gotOptions });
+    this.maskedLog({ method: 'deleteJson', url, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),
@@ -226,5 +227,9 @@ export class HttpService {
     const gotOptions = Object.keys(rest).length ? rest : undefined;
 
     return { policy, gotOptions };
+  }
+
+  maskedLog(obj: object) {
+    this.logger.debug(maskObject(obj, this.options));
   }
 }

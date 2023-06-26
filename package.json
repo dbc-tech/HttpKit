@@ -1,6 +1,6 @@
 {
   "name": "@dbc-tech/http-kit",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A Node.js package for managing HTTP client requests",
   "author": "Deep Blue Company",
   "license": "MIT",

@@ -102,7 +102,11 @@ describe('HttpService', () => {
 
       nock(baseUrl).post(`/${path}`).reply(201, postResponse);
 
-      const httpService = new HttpService(baseUrl);
+      const httpService = new HttpService(baseUrl, undefined, {
+        logging: {
+          maskProperties: ['name'],
+        },
+      });
       const gotPost = jest.spyOn(httpService.http, 'post');
       const url = new URL(path, baseUrl);
       const response = await httpService.postJson(url, postPayload);
@@ -110,7 +114,11 @@ describe('HttpService', () => {
       expect(gotPost).toHaveBeenCalledTimes(1);
       expect(gotPost).toHaveBeenCalledWith(
         url,
-        expect.objectContaining({ json: postPayload }),
+        expect.objectContaining({
+          json: {
+            name: 'Mack Bloke',
+          },
+        }),
       );
       expect(response.data).toEqual(postResponse);
       expect(response.statusCode).toEqual(201);

@@ -21,7 +21,7 @@ export type ResilienceOptions<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   A = any,
 > = {
-  policy: ResiliencePolicy<C, A>;
+  policy?: ResiliencePolicy<C, A>;
   options?: ResiliencePolicyLoggingOptions;
 };
 

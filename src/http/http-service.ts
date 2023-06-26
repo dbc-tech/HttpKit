@@ -35,28 +35,21 @@ export class HttpService {
     public readonly getAuthToken?: GetBearerTokenFn,
     public readonly options?: HttpServiceOptions,
   ) {
-    const {
-      resiliencePolicy = noop,
-      logger,
-      defaultLoggerOptions,
-      resiliencePolicyLoggingOptions = {
-        success: false,
-        failure: true,
-      },
-      ...gotOptions
-    } = options || {};
+    const { http, resilience, logging } = options || {};
 
-    this.resiliencePolicy = resiliencePolicy;
-    this.resiliencePolicyLoggingOptions = resiliencePolicyLoggingOptions;
-    const winstonLogger = logger
-      ? logger
-      : getWinstonLogger(defaultLoggerOptions);
+    this.resiliencePolicy = resilience?.policy ?? noop;
+    this.resiliencePolicyLoggingOptions = resilience?.options ?? {
+      logSuccess: false,
+      logFailure: true,
+    };
+    const winstonLogger =
+      logging?.logger ?? getWinstonLogger(logging?.defaultLoggerOptions);
     this.logger = winstonLogger.child({ context: 'http-service' });
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
-      ...gotOptions?.headers,
+      ...http?.headers,
     };
 
     const beforeRequest: BeforeRequestHook[] = this.getAuthToken
@@ -101,7 +94,7 @@ export class HttpService {
       : [];
 
     this.http = got.extend({
-      ...gotOptions,
+      ...http,
       mutableDefaults: true,
       headers: this.defaultHeaders,
       responseType: 'json',
@@ -205,7 +198,8 @@ export class HttpService {
     const policy = resiliencePolicy ?? this.resiliencePolicy;
 
     if (this.resiliencePolicyLoggingOptions) {
-      const { success, failure } = this.resiliencePolicyLoggingOptions;
+      const { logSuccess: success, logFailure: failure } =
+        this.resiliencePolicyLoggingOptions;
 
       if (success)
         policy.onSuccess((data) =>
@@ -230,6 +224,6 @@ export class HttpService {
   }
 
   maskedLog(obj: object) {
-    this.logger.debug(maskObject(obj, this.options));
+    this.logger.debug(maskObject(obj, this.options?.logging));
   }
 }

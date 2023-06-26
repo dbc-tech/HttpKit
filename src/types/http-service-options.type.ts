@@ -3,6 +3,8 @@ import { ExtendOptions } from 'got-cjs';
 import { Logger } from 'winston';
 import { WinstonLoggerOptions } from '../utils';
 
+export type HttpOptions = ExtendOptions;
+
 export type ResiliencePolicy<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,21 +12,34 @@ export type ResiliencePolicy<
 > = IPolicy<C, A>;
 
 export type ResiliencePolicyLoggingOptions = {
-  success?: boolean;
-  failure?: boolean;
+  logSuccess?: boolean;
+  logFailure?: boolean;
+};
+
+export type ResilienceOptions<
+  C extends IDefaultPolicyContext = IDefaultPolicyContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  A = any,
+> = {
+  policy: ResiliencePolicy<C, A>;
+  options?: ResiliencePolicyLoggingOptions;
 };
 
 export type DefaultLoggerOptions = WinstonLoggerOptions;
+
+export type LoggingOptions = {
+  logger?: Logger;
+  defaultLoggerOptions?: DefaultLoggerOptions;
+  hideProperties?: string[];
+  maskProperties?: string[];
+};
 
 export type HttpServiceOptions<
   C extends IDefaultPolicyContext = IDefaultPolicyContext,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   A = any,
-> = ExtendOptions & {
-  resiliencePolicy?: ResiliencePolicy<C, A>;
-  logger?: Logger;
-  defaultLoggerOptions?: DefaultLoggerOptions;
-  resiliencePolicyLoggingOptions?: ResiliencePolicyLoggingOptions;
-  hideProperties?: string[];
-  maskProperties?: string[];
+> = {
+  http?: HttpOptions;
+  resilience?: ResilienceOptions<C, A>;
+  logging?: LoggingOptions;
 };

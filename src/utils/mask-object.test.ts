@@ -75,37 +75,6 @@ describe('maskObject', () => {
     });
   });
 
-  it('should ignore null properties', () => {
-    const obj = {
-      method: 'putJson',
-      url: 'https://api.offertoown.cc/oto/v1/staff/sdw2mfxs',
-      json: {
-        firstName: 'Offer to Own',
-        lastName: 'Integration',
-        mobileNumber: null,
-        email: 'crm@offertoown.com.au',
-        crmStaffRole: 'admin',
-        jobTitle: null,
-        showMobile: false,
-        crmActive: true,
-      },
-    };
-    expect(maskObject(obj)).toEqual({
-      method: 'putJson',
-      url: 'https://api.offertoown.cc/oto/v1/staff/sdw2mfxs',
-      json: {
-        firstName: 'Offer to Own',
-        lastName: 'Integration',
-        mobileNumber: null,
-        email: 'crm@offertoown.com.au',
-        crmStaffRole: 'admin',
-        jobTitle: null,
-        showMobile: false,
-        crmActive: true,
-      },
-    });
-  });
-
   it('should ignore null properties within an array', () => {
     const obj = { a: 1, b: [{ c: 3 }, { d: 4 }, { e: null }], f: 5 };
     expect(maskObject(obj)).toEqual({
@@ -151,55 +120,153 @@ describe('maskObject', () => {
 
   it('should correctly mask a complex object', () => {
     const obj = {
-      method: 'getJson',
-      url: 'https://api.agentboxcrm.com.au/inspections',
-      gotOptions: {
-        headers: {
-          'X-Client-ID': 'aHR0crgwok43-0igermp34-0jkvwa4pm4',
-          'X-API-Key': '7f8e377a-7a06-45a1-86c5-e655d6bc792b',
+      method: 'filterByCrmSync',
+      crmApiKeys: [
+        {
+          id: '2',
+          apiKey: 'xxxxxxxxxx22cf-ee91-9f94-9cbe-9966-1e45-234b-f051',
+          clientId:
+            'xxxxxxxxxx9kYmNzYW5kYm94LmFnZW50Ym94Y3JtLmNvbS5hdS9hZG1pbi8',
+          hash: 'ABApiKey',
+          createdAt: '2023-03-16T06:24:44.000Z',
+          updatedAt: '2023-03-16T06:24:44.000Z',
+          agencies: [
+            {
+              id: '2',
+              name: 'AgentBox Test Account',
+              crmOfficeId: '1',
+              status: 'Enabled',
+              unitNumber: '1',
+              streetAddress: 'test street',
+              suburb: 'QA Suburb',
+              state: 'QLD',
+              postcode: '4000',
+              country: 'Australia',
+              website: 'offertoown.cc',
+              phone: '0400000000',
+              email: 'qa@dbc.com.au',
+              hash: 'AgentBoxHash',
+              crmSync: true,
+              timeZone: 'Australia/Sydney',
+              displayName: 'd AgentBox Test Account',
+              primaryColor: '241, 242, 242, 1',
+              logoImage: 'agentbox-logo.png',
+              rexAccountId: null,
+              createdAt: '2023-03-16T06:24:46.000Z',
+              updatedAt: '2023-03-21T03:43:12.000Z',
+              isTestAccount: true,
+              operationalStates: ['QLD', 'NSW'],
+            },
+          ],
+          crm: {
+            id: '2',
+            name: 'AgentBox',
+            createdAt: '2023-03-16T06:24:42.000Z',
+            updatedAt: '2023-03-16T06:24:42.000Z',
+          },
         },
-        searchParams: {
-          limit: 0,
-          include: 'contact,listing',
-          'filter[modifiedAfter]': '2023-06-23T06:33:29.398Z',
-          version: 2,
-        },
-      },
+      ],
     };
-    const options = { maskProperties: ['X-Client-ID', 'X-API-Key'] };
+    const options = {
+      maskProperties: ['apiKey', 'clientId', 'email', 'phone'],
+    };
     const result = maskObject(obj, options);
     expect(result).toEqual({
-      method: 'getJson',
-      url: 'https://api.agentboxcrm.com.au/inspections',
-      gotOptions: {
-        headers: {
-          'X-Client-ID': '*********************************',
-          'X-API-Key': '************************************',
+      method: 'filterByCrmSync',
+      crmApiKeys: [
+        {
+          id: '2',
+          apiKey: '*************************************************',
+          clientId:
+            '***********************************************************',
+          hash: 'ABApiKey',
+          createdAt: '2023-03-16T06:24:44.000Z',
+          updatedAt: '2023-03-16T06:24:44.000Z',
+          agencies: [
+            {
+              id: '2',
+              name: 'AgentBox Test Account',
+              crmOfficeId: '1',
+              status: 'Enabled',
+              unitNumber: '1',
+              streetAddress: 'test street',
+              suburb: 'QA Suburb',
+              state: 'QLD',
+              postcode: '4000',
+              country: 'Australia',
+              website: 'offertoown.cc',
+              phone: '**********',
+              email: '*************',
+              hash: 'AgentBoxHash',
+              crmSync: true,
+              timeZone: 'Australia/Sydney',
+              displayName: 'd AgentBox Test Account',
+              primaryColor: '241, 242, 242, 1',
+              logoImage: 'agentbox-logo.png',
+              rexAccountId: null,
+              createdAt: '2023-03-16T06:24:46.000Z',
+              updatedAt: '2023-03-21T03:43:12.000Z',
+              isTestAccount: true,
+              operationalStates: ['QLD', 'NSW'],
+            },
+          ],
+          crm: {
+            id: '2',
+            name: 'AgentBox',
+            createdAt: '2023-03-16T06:24:42.000Z',
+            updatedAt: '2023-03-16T06:24:42.000Z',
+          },
         },
-        searchParams: {
-          limit: 0,
-          include: 'contact,listing',
-          'filter[modifiedAfter]': '2023-06-23T06:33:29.398Z',
-          version: 2,
-        },
-      },
+      ],
     });
     // Original should not be mutated
     expect(obj).toEqual({
-      method: 'getJson',
-      url: 'https://api.agentboxcrm.com.au/inspections',
-      gotOptions: {
-        headers: {
-          'X-Client-ID': 'aHR0crgwok43-0igermp34-0jkvwa4pm4',
-          'X-API-Key': '7f8e377a-7a06-45a1-86c5-e655d6bc792b',
+      method: 'filterByCrmSync',
+      crmApiKeys: [
+        {
+          id: '2',
+          apiKey: 'xxxxxxxxxx22cf-ee91-9f94-9cbe-9966-1e45-234b-f051',
+          clientId:
+            'xxxxxxxxxx9kYmNzYW5kYm94LmFnZW50Ym94Y3JtLmNvbS5hdS9hZG1pbi8',
+          hash: 'ABApiKey',
+          createdAt: '2023-03-16T06:24:44.000Z',
+          updatedAt: '2023-03-16T06:24:44.000Z',
+          agencies: [
+            {
+              id: '2',
+              name: 'AgentBox Test Account',
+              crmOfficeId: '1',
+              status: 'Enabled',
+              unitNumber: '1',
+              streetAddress: 'test street',
+              suburb: 'QA Suburb',
+              state: 'QLD',
+              postcode: '4000',
+              country: 'Australia',
+              website: 'offertoown.cc',
+              phone: '0400000000',
+              email: 'qa@dbc.com.au',
+              hash: 'AgentBoxHash',
+              crmSync: true,
+              timeZone: 'Australia/Sydney',
+              displayName: 'd AgentBox Test Account',
+              primaryColor: '241, 242, 242, 1',
+              logoImage: 'agentbox-logo.png',
+              rexAccountId: null,
+              createdAt: '2023-03-16T06:24:46.000Z',
+              updatedAt: '2023-03-21T03:43:12.000Z',
+              isTestAccount: true,
+              operationalStates: ['QLD', 'NSW'],
+            },
+          ],
+          crm: {
+            id: '2',
+            name: 'AgentBox',
+            createdAt: '2023-03-16T06:24:42.000Z',
+            updatedAt: '2023-03-16T06:24:42.000Z',
+          },
         },
-        searchParams: {
-          limit: 0,
-          include: 'contact,listing',
-          'filter[modifiedAfter]': '2023-06-23T06:33:29.398Z',
-          version: 2,
-        },
-      },
+      ],
     });
   });
 });

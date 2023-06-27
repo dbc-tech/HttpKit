@@ -19,6 +19,7 @@ export const maskObject = (object: any, options?: MaskOptions) => {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const recursiveMask = (object: any, options: MaskOptions) => {
+  if (!object) return;
   Object.keys(object).forEach((key) => {
     if (typeof object[key] === 'object' && !Array.isArray(object[key])) {
       recursiveMask(object[key], options);

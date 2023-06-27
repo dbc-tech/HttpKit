@@ -94,13 +94,31 @@ describe('maskObject', () => {
       },
     };
     const options = { maskProperties: ['X-Client-ID', 'X-API-Key'] };
-    expect(maskObject(obj, options)).toEqual({
+    const result = maskObject(obj, options);
+    expect(result).toEqual({
       method: 'getJson',
       url: 'https://api.agentboxcrm.com.au/inspections',
       gotOptions: {
         headers: {
           'X-Client-ID': '*********************************',
           'X-API-Key': '************************************',
+        },
+        searchParams: {
+          limit: 0,
+          include: 'contact,listing',
+          'filter[modifiedAfter]': '2023-06-23T06:33:29.398Z',
+          version: 2,
+        },
+      },
+    });
+    // Original should not be mutated
+    expect(obj).toEqual({
+      method: 'getJson',
+      url: 'https://api.agentboxcrm.com.au/inspections',
+      gotOptions: {
+        headers: {
+          'X-Client-ID': 'aHR0crgwok43-0igermp34-0jkvwa4pm4',
+          'X-API-Key': '7f8e377a-7a06-45a1-86c5-e655d6bc792b',
         },
         searchParams: {
           limit: 0,

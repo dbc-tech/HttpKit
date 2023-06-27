@@ -9,7 +9,7 @@ export const maskObject = (object: any, options?: MaskOptions) => {
   if (!object || typeof object !== 'object') return object;
   if (!options?.maskProperties && !options?.hideProperties) return object;
 
-  const copyObject = { ...object };
+  const copyObject = JSON.parse(JSON.stringify(object));
   recursiveMask(copyObject, options);
   return copyObject;
 };

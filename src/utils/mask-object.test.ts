@@ -75,6 +75,37 @@ describe('maskObject', () => {
     });
   });
 
+  it('should ignore null properties', () => {
+    const obj = {
+      method: 'putJson',
+      url: 'https://api.offertoown.cc/oto/v1/staff/sdw2mfxs',
+      json: {
+        firstName: 'Offer to Own',
+        lastName: 'Integration',
+        mobileNumber: null,
+        email: 'crm@offertoown.com.au',
+        crmStaffRole: 'admin',
+        jobTitle: null,
+        showMobile: false,
+        crmActive: true,
+      },
+    };
+    expect(maskObject(obj)).toEqual({
+      method: 'putJson',
+      url: 'https://api.offertoown.cc/oto/v1/staff/sdw2mfxs',
+      json: {
+        firstName: 'Offer to Own',
+        lastName: 'Integration',
+        mobileNumber: null,
+        email: 'crm@offertoown.com.au',
+        crmStaffRole: 'admin',
+        jobTitle: null,
+        showMobile: false,
+        crmActive: true,
+      },
+    });
+  });
+
   it('should ignore null properties within an array', () => {
     const obj = { a: 1, b: [{ c: 3 }, { d: 4 }, { e: null }], f: 5 };
     expect(maskObject(obj)).toEqual({

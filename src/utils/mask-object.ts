@@ -8,10 +8,13 @@ export type MaskOptions = {
 export const maskObject = (object: any, options?: MaskOptions) => {
   if (!object || typeof object !== 'object') return object;
   if (!options?.maskProperties && !options?.hideProperties) return object;
-
-  const copyObject = JSON.parse(JSON.stringify(object));
-  recursiveMask(copyObject, options);
-  return copyObject;
+  try {
+    const copyObject = JSON.parse(JSON.stringify(object));
+    recursiveMask(copyObject, options);
+    return copyObject;
+  } catch (err) {
+    return object;
+  }
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

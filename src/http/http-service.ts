@@ -224,6 +224,10 @@ export class HttpService {
   }
 
   maskedLog(obj: object) {
-    this.logger.debug(maskObject(obj, this.options?.logging));
+    try {
+      this.logger.debug(maskObject(obj, this.options?.logging));
+    } catch (err) {
+      this.logger.error(`Error masking object: ${JSON.stringify(obj)}`);
+    }
   }
 }

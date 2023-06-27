@@ -66,6 +66,48 @@ describe('maskObject', () => {
     });
   });
 
+  it('should ignore undefined properties within an array', () => {
+    const obj = { a: 1, b: [{ c: 3 }, { d: 4 }, { e: undefined }], f: 5 };
+    expect(maskObject(obj)).toEqual({
+      a: 1,
+      b: [{ c: 3 }, { d: 4 }, { e: undefined }],
+      f: 5,
+    });
+  });
+
+  it('should ignore null properties within an array', () => {
+    const obj = { a: 1, b: [{ c: 3 }, { d: 4 }, { e: null }], f: 5 };
+    expect(maskObject(obj)).toEqual({
+      a: 1,
+      b: [{ c: 3 }, { d: 4 }, { e: null }],
+      f: 5,
+    });
+  });
+
+  it('should ignore empty array', () => {
+    const obj = { a: 1, b: [] };
+    expect(maskObject(obj)).toEqual({
+      a: 1,
+      b: [],
+    });
+  });
+
+  it('should ignore empty object', () => {
+    const obj = { a: 1, b: {} };
+    expect(maskObject(obj)).toEqual({
+      a: 1,
+      b: {},
+    });
+  });
+
+  it('should ignore array of empty object', () => {
+    const obj = { a: 1, b: [{}] };
+    expect(maskObject(obj)).toEqual({
+      a: 1,
+      b: [{}],
+    });
+  });
+
   it('should hide properties within an array', () => {
     const obj = { a: 1, b: [{ c: 3 }, { d: 4 }], e: 5 };
     const options = { hideProperties: ['c'] };

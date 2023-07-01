@@ -367,4 +367,40 @@ describe('HttpService', () => {
       expect(response.statusCode).toBe(200);
     });
   });
+
+  describe('mask', () => {
+    it('should return the original object if logging is disabled', () => {
+      const httpService = new HttpService('https://reqres.in/api/');
+      const obj = { a: 1, b: 2 };
+      expect(httpService.mask(obj)).toEqual(obj);
+    });
+
+    it('should hide properties specified in the logging options', () => {
+      const httpService = new HttpService('https://reqres.in/api/', undefined, {
+        logging: { hideProperties: ['b'] },
+      });
+      const obj = { a: 1, b: 2, c: 3 };
+      expect(httpService.mask(obj)).toEqual({ a: 1, c: 3 });
+    });
+
+    it('should mask properties specified in the logging options', () => {
+      const httpService = new HttpService('https://reqres.in/api/', undefined, {
+        logging: { maskProperties: ['b'] },
+      });
+      const obj = { a: 1, b: 2, c: 3 };
+      expect(httpService.mask(obj)).toEqual({ a: 1, b: '*', c: 3 });
+    });
+
+    it('should recursively hide and mask properties', () => {
+      const httpService = new HttpService('https://reqres.in/api/', undefined, {
+        logging: { hideProperties: ['c'], maskProperties: ['d'] },
+      });
+      const obj = { a: 1, b: { c: 2, d: 3 }, e: 4 };
+      expect(httpService.mask(obj)).toEqual({
+        a: 1,
+        b: { c: undefined, d: '*' },
+        e: 4,
+      });
+    });
+  });
 });

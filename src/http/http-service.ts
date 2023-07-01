@@ -224,7 +224,7 @@ export class HttpService {
   }
 
   mask(obj: object) {
-    maskObject(obj, this.options?.logging);
+    return maskObject(obj, this.options?.logging);
   }
 
   private maskedDebugLog(obj: object) {

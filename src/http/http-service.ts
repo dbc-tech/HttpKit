@@ -112,7 +112,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedLog({ method: 'getJson', url, gotOptions });
+    this.maskedDebugLog({ method: 'getJson', url, gotOptions });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
 
@@ -128,7 +128,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedLog({ method: 'postJson', url, json, gotOptions });
+    this.maskedDebugLog({ method: 'postJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
@@ -149,7 +149,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedLog({ method: 'putJson', url, json, gotOptions });
+    this.maskedDebugLog({ method: 'putJson', url, json, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
@@ -168,7 +168,7 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedLog({ method: 'deleteJson', url, gotOptions });
+    this.maskedDebugLog({ method: 'deleteJson', url, gotOptions });
 
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),
@@ -223,7 +223,11 @@ export class HttpService {
     return { policy, gotOptions };
   }
 
-  maskedLog(obj: object) {
-    this.logger.debug(maskObject(obj, this.options?.logging));
+  mask(obj: object) {
+    maskObject(obj, this.options?.logging);
+  }
+
+  private maskedDebugLog(obj: object) {
+    this.logger.debug(this.mask(obj));
   }
 }

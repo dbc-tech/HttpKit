@@ -1,6 +1,12 @@
-# HttpKit
+# http-kit
 
 A Node.js package for managing HTTP client requests
+
+## Install
+
+```
+npm install @dbc-tech/http-kit
+```
 
 ## Utilities
 

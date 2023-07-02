@@ -6,7 +6,10 @@ import got, {
   Response,
 } from 'got-cjs';
 import { Logger } from 'winston';
-import { HttpRequestOptions } from '../types/http-request-options.type';
+import {
+  HttpPaginateRequestOptions,
+  HttpRequestOptions,
+} from '../types/http-request-options.type';
 import {
   HttpServiceOptions,
   ResiliencePolicy,
@@ -177,6 +180,20 @@ export class HttpService {
     return this.makeResponse<T>(res, dtoConstructor);
   }
 
+  async paginate<T>(
+    url: URL,
+    options?: HttpPaginateRequestOptions<T>,
+  ): Promise<AsyncIterableIterator<T>> {
+    const { policy, gotOptions } = this.parsePaginateOptions(options);
+
+    this.maskedDebugLog({ method: 'paginate', url, gotOptions });
+
+    const res = await policy.execute(() =>
+      this.http.paginate<T>(url, gotOptions),
+    );
+    return res;
+  }
+
   makeResponse<T>(
     gotResponse: Response<T>,
     dtoConstructor?: DtoConstructor<T>,
@@ -197,30 +214,47 @@ export class HttpService {
     const { resiliencePolicy, ...rest } = options;
     const policy = resiliencePolicy ?? this.resiliencePolicy;
 
-    if (this.resiliencePolicyLoggingOptions) {
-      const { logSuccess: success, logFailure: failure } =
-        this.resiliencePolicyLoggingOptions;
-
-      if (success)
-        policy.onSuccess((data) =>
-          this.logger.debug({
-            ...data,
-            _source: 'resilience-policy-onSuccess',
-          }),
-        );
-
-      if (failure)
-        policy.onFailure((data) =>
-          this.logger.warn({
-            ...data,
-            _source: 'resilience-policy-onFailure',
-          }),
-        );
-    }
+    this.setupPolicyLogging(policy);
 
     const gotOptions = Object.keys(rest).length ? rest : undefined;
 
     return { policy, gotOptions };
+  }
+
+  parsePaginateOptions<T>(options?: HttpPaginateRequestOptions<T>) {
+    if (!options) return { policy: this.resiliencePolicy };
+
+    const { resiliencePolicy, ...rest } = options;
+    const policy = resiliencePolicy ?? this.resiliencePolicy;
+
+    this.setupPolicyLogging(policy);
+
+    const gotOptions = Object.keys(rest).length ? rest : undefined;
+
+    return { policy, gotOptions };
+  }
+
+  setupPolicyLogging(policy: ResiliencePolicy) {
+    if (!this.resiliencePolicyLoggingOptions) return;
+
+    const { logSuccess: success, logFailure: failure } =
+      this.resiliencePolicyLoggingOptions;
+
+    if (success)
+      policy.onSuccess((data) =>
+        this.logger.debug({
+          ...data,
+          _source: 'resilience-policy-onSuccess',
+        }),
+      );
+
+    if (failure)
+      policy.onFailure((data) =>
+        this.logger.warn({
+          ...data,
+          _source: 'resilience-policy-onFailure',
+        }),
+      );
   }
 
   mask(obj: object) {

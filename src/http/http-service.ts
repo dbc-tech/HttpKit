@@ -115,7 +115,11 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedDebugLog({ method: 'getJson', url, gotOptions });
+    this.maskedDebugLog('Method getJson args', {
+      method: 'getJson',
+      url,
+      gotOptions,
+    });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
 
@@ -131,7 +135,12 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedDebugLog({ method: 'postJson', url, json, gotOptions });
+    this.maskedDebugLog('Method postJson args', {
+      method: 'postJson',
+      url,
+      json,
+      gotOptions,
+    });
 
     const res = await policy.execute(() =>
       this.http.post<T>(url, {
@@ -152,7 +161,12 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedDebugLog({ method: 'putJson', url, json, gotOptions });
+    this.maskedDebugLog('Method putJson args', {
+      method: 'putJson',
+      url,
+      json,
+      gotOptions,
+    });
 
     const res = await policy.execute(() =>
       this.http.put<T>(url, {
@@ -171,7 +185,11 @@ export class HttpService {
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
 
-    this.maskedDebugLog({ method: 'deleteJson', url, gotOptions });
+    this.maskedDebugLog('Method deleteJson args', {
+      method: 'deleteJson',
+      url,
+      gotOptions,
+    });
 
     const res = await policy.execute(() =>
       this.http.delete<T>(url, gotOptions),
@@ -186,7 +204,11 @@ export class HttpService {
   ): Promise<AsyncIterableIterator<T>> {
     const { policy, gotOptions } = this.parsePaginateOptions(options);
 
-    this.maskedDebugLog({ method: 'paginate', url, gotOptions });
+    this.maskedDebugLog('Method paginate args', {
+      method: 'paginate',
+      url,
+      gotOptions,
+    });
 
     const res = await policy.execute(() =>
       this.http.paginate<T>(url, gotOptions),
@@ -242,17 +264,17 @@ export class HttpService {
 
     if (success)
       policy.onSuccess((data) =>
-        this.logger.debug({
+        this.logger.debug('Policy.onSuccess callback', {
           ...data,
-          _source: 'resilience-policy-onSuccess',
+          source: 'Policy.onSuccess',
         }),
       );
 
     if (failure)
       policy.onFailure((data) =>
-        this.logger.warn({
+        this.logger.warn('Policy.onFailure callback', {
           ...data,
-          _source: 'resilience-policy-onFailure',
+          source: 'Policy.onFailure',
         }),
       );
   }
@@ -261,7 +283,7 @@ export class HttpService {
     return maskObject(obj, this.options?.logging);
   }
 
-  private maskedDebugLog(obj: object) {
-    this.logger.debug(this.mask(obj));
+  private maskedDebugLog(message: string, obj: object) {
+    this.logger.debug(message, this.mask(obj));
   }
 }

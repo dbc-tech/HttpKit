@@ -117,8 +117,10 @@ export class HttpService {
 
     this.maskedDebugLog('Method getJson args', {
       method: 'getJson',
-      url,
-      gotOptions,
+      data: {
+        url,
+        gotOptions,
+      },
     });
 
     const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
@@ -137,9 +139,11 @@ export class HttpService {
 
     this.maskedDebugLog('Method postJson args', {
       method: 'postJson',
-      url,
-      json,
-      gotOptions,
+      data: {
+        url,
+        json,
+        gotOptions,
+      },
     });
 
     const res = await policy.execute(() =>
@@ -163,9 +167,11 @@ export class HttpService {
 
     this.maskedDebugLog('Method putJson args', {
       method: 'putJson',
-      url,
-      json,
-      gotOptions,
+      data: {
+        url,
+        json,
+        gotOptions,
+      },
     });
 
     const res = await policy.execute(() =>
@@ -187,8 +193,10 @@ export class HttpService {
 
     this.maskedDebugLog('Method deleteJson args', {
       method: 'deleteJson',
-      url,
-      gotOptions,
+      data: {
+        url,
+        gotOptions,
+      },
     });
 
     const res = await policy.execute(() =>
@@ -206,8 +214,10 @@ export class HttpService {
 
     this.maskedDebugLog('Method paginate args', {
       method: 'paginate',
-      url,
-      gotOptions,
+      data: {
+        url,
+        gotOptions,
+      },
     });
 
     const res = await policy.execute(() =>
@@ -265,16 +275,16 @@ export class HttpService {
     if (success)
       policy.onSuccess((data) =>
         this.logger.debug('Policy.onSuccess callback', {
-          ...data,
-          source: 'Policy.onSuccess',
+          data,
+          method: 'Policy.onSuccess',
         }),
       );
 
     if (failure)
       policy.onFailure((data) =>
         this.logger.warn('Policy.onFailure callback', {
-          ...data,
-          source: 'Policy.onFailure',
+          data,
+          method: 'Policy.onFailure',
         }),
       );
   }

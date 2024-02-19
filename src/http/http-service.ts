@@ -5,7 +5,6 @@ import got, {
   Got,
   Response,
 } from 'got-cjs';
-import { Logger } from 'winston';
 import {
   HttpPaginateRequestOptions,
   HttpRequestOptions,
@@ -16,9 +15,9 @@ import {
   ResiliencePolicyLoggingOptions,
 } from '../types/http-service-options.type';
 import { HttpServiceResponse } from '../types/http-service-response.type';
-import { getWinstonLogger } from '../utils';
-import { DtoConstructor, plainToDto } from '../utils/plain-to-dto';
 import { maskObject } from '../utils/mask-object';
+import { Logger } from '../types/logger.type';
+import { nullLogger } from '../utils/logger';
 
 export type GetBearerTokenFn = () => Promise<string>;
 
@@ -45,9 +44,7 @@ export class HttpService {
       logSuccess: false,
       logFailure: true,
     };
-    const winstonLogger =
-      logging?.logger ?? getWinstonLogger(logging?.defaultLoggerOptions);
-    this.logger = winstonLogger.child({ context: 'http-service' });
+    this.logger = logging?.logger ?? nullLogger();
 
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -98,6 +95,7 @@ export class HttpService {
 
     this.http = got.extend({
       ...http,
+      prefixUrl: baseUrl,
       mutableDefaults: true,
       headers: this.defaultHeaders,
       responseType: 'json',
@@ -108,31 +106,26 @@ export class HttpService {
     });
   }
 
-  async getJson<T>(
-    url: URL,
-    dtoConstructor?: DtoConstructor<T>,
-    options?: HttpRequestOptions,
-  ) {
+  async getJson<T>(path: string, options?: HttpRequestOptions) {
     const { policy, gotOptions } = this.parseOptions(options);
 
     this.maskedDebugLog('Method getJson args', {
       method: 'getJson',
       data: {
-        url,
+        path,
         gotOptions,
       },
     });
 
-    const res = await policy.execute(() => this.http.get<T>(url, gotOptions));
+    const res = await policy.execute(() => this.http.get<T>(path, gotOptions));
 
-    return this.makeResponse<T>(res, dtoConstructor);
+    return this.makeResponse<T>(res);
   }
 
   async postJson<T>(
-    url: URL,
+    path: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     json?: Record<string, any>,
-    dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
@@ -140,27 +133,26 @@ export class HttpService {
     this.maskedDebugLog('Method postJson args', {
       method: 'postJson',
       data: {
-        url,
+        path,
         json,
         gotOptions,
       },
     });
 
     const res = await policy.execute(() =>
-      this.http.post<T>(url, {
+      this.http.post<T>(path, {
         ...gotOptions,
         json,
       }),
     );
 
-    return this.makeResponse<T>(res, dtoConstructor);
+    return this.makeResponse<T>(res);
   }
 
   async putJson<T>(
-    url: URL,
+    path: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     json?: Record<string, any>,
-    dtoConstructor?: DtoConstructor<T>,
     options?: HttpRequestOptions,
   ) {
     const { policy, gotOptions } = this.parseOptions(options);
@@ -168,42 +160,38 @@ export class HttpService {
     this.maskedDebugLog('Method putJson args', {
       method: 'putJson',
       data: {
-        url,
+        path,
         json,
         gotOptions,
       },
     });
 
     const res = await policy.execute(() =>
-      this.http.put<T>(url, {
+      this.http.put<T>(path, {
         ...gotOptions,
         json,
       }),
     );
 
-    return this.makeResponse<T>(res, dtoConstructor);
+    return this.makeResponse<T>(res);
   }
 
-  async deleteJson<T>(
-    url: URL,
-    dtoConstructor?: DtoConstructor<T>,
-    options?: HttpRequestOptions,
-  ) {
+  async deleteJson<T>(path: string, options?: HttpRequestOptions) {
     const { policy, gotOptions } = this.parseOptions(options);
 
     this.maskedDebugLog('Method deleteJson args', {
       method: 'deleteJson',
       data: {
-        url,
+        path,
         gotOptions,
       },
     });
 
     const res = await policy.execute(() =>
-      this.http.delete<T>(url, gotOptions),
+      this.http.delete<T>(path, gotOptions),
     );
 
-    return this.makeResponse<T>(res, dtoConstructor);
+    return this.makeResponse<T>(res);
   }
 
   async paginate<T>(
@@ -226,12 +214,9 @@ export class HttpService {
     return res;
   }
 
-  makeResponse<T>(
-    gotResponse: Response<T>,
-    dtoConstructor?: DtoConstructor<T>,
-  ): HttpServiceResponse<T> {
+  makeResponse<T>(gotResponse: Response<T>): HttpServiceResponse<T> {
     return {
-      data: plainToDto<T>(gotResponse.body, dtoConstructor),
+      data: gotResponse.body,
       statusCode: gotResponse.statusCode,
     };
   }

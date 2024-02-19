@@ -1,21 +1,29 @@
-import winston from 'winston';
-import * as Transport from 'winston-transport';
+import { Logger } from '../types';
 
-export type WinstonLoggerOptions = {
-  level?: string;
-  meta?: Record<string, unknown>;
-  extraTransports?: Transport[];
+export const nullLogger = (): Logger => {
+  return {
+    error: (message: string, ...args: unknown[]) => nop(message, ...args),
+    warn: (message: string, ...args: unknown[]) => nop(message, ...args),
+    info: (message: string, ...args: unknown[]) => nop(message, ...args),
+    debug: (message: string, ...args: unknown[]) => nop(message, ...args),
+    trace: (message: string, ...args: unknown[]) => nop(message, ...args),
+  };
 };
 
-export function getWinstonLogger(options?: WinstonLoggerOptions) {
-  const level = options?.level || 'info';
-  const extraTransports = options?.extraTransports || [];
+// eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+export const nop = (message: string, ...args: unknown[]) => {};
 
-  const logger = winston.createLogger({
-    level,
-    defaultMeta: options?.meta,
-    transports: [new winston.transports.Console(), ...extraTransports],
-  });
-
-  return logger;
-}
+export const consoleLogger = (): Logger => {
+  return {
+    error: (message: string, ...args: unknown[]) =>
+      console.error(message, ...args),
+    warn: (message: string, ...args: unknown[]) =>
+      console.warn(message, ...args),
+    info: (message: string, ...args: unknown[]) =>
+      console.info(message, ...args),
+    debug: (message: string, ...args: unknown[]) =>
+      console.debug(message, ...args),
+    trace: (message: string, ...args: unknown[]) =>
+      console.trace(message, ...args),
+  };
+};

@@ -1,7 +1,6 @@
 import { IDefaultPolicyContext, type IPolicy } from 'cockatiel';
 import { ExtendOptions } from 'got-cjs';
-import { Logger } from 'winston';
-import { WinstonLoggerOptions } from '../utils';
+import { Logger } from './logger.type';
 
 export type HttpOptions = ExtendOptions;
 
@@ -25,11 +24,8 @@ export type ResilienceOptions<
   options?: ResiliencePolicyLoggingOptions;
 };
 
-export type DefaultLoggerOptions = WinstonLoggerOptions;
-
 export type LoggingOptions = {
   logger?: Logger;
-  defaultLoggerOptions?: DefaultLoggerOptions;
   hideProperties?: string[];
   maskProperties?: string[];
 };

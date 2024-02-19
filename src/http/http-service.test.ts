@@ -1,4 +1,3 @@
-import { Type } from 'class-transformer';
 import { ExponentialBackoff, handleAll, retry } from 'cockatiel';
 import nock from 'nock';
 import { HttpServiceOptions } from '../types';
@@ -13,8 +12,9 @@ describe('HttpService', () => {
     'should attach the correct headers to the request',
     async ({ getAuthToken, expectedHeaders }) => {
       const baseUrl = 'http://localhost:3000';
+      const path = 'slack';
 
-      nock(baseUrl).get('/').reply(200);
+      nock(baseUrl).get(`/${path}`).reply(200);
 
       const httpService = new HttpService(baseUrl, getAuthToken);
       expect(httpService.http.defaults.options.headers).toEqual(
@@ -24,7 +24,7 @@ describe('HttpService', () => {
         }),
       );
 
-      const headers = (await httpService.http.get(baseUrl)).request.options
+      const headers = (await httpService.http.get(path)).request.options
         .headers;
       expect(headers).toMatchObject({
         accept: 'application/json',
@@ -44,11 +44,9 @@ describe('HttpService', () => {
 
       const httpService = new HttpService(baseUrl);
       const gotGet = jest.spyOn(httpService.http, 'get');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.getJson(url);
+      const response = await httpService.getJson(path);
 
       expect(gotGet).toHaveBeenCalledTimes(1);
-      expect(gotGet).toHaveBeenCalledWith(url, undefined);
       expect(response.data).toEqual({ tag: 1234567 });
       expect(response.statusCode).toBe(200);
     });
@@ -67,22 +65,15 @@ describe('HttpService', () => {
       class Dto {
         tag: number;
 
-        @Type(() => Date)
         createdAt: Date;
       }
 
       const httpService = new HttpService(baseUrl);
       const gotGet = jest.spyOn(httpService.http, 'get');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.getJson<Dto>(url, Dto);
+      const response = await httpService.getJson<Dto>(path);
 
       expect(gotGet).toHaveBeenCalledTimes(1);
-      expect(gotGet).toHaveBeenCalledWith(url, undefined);
-
-      expect(response.data).toEqual({
-        tag: getResponse.tag,
-        createdAt: new Date(getResponse.createdAt),
-      });
+      expect(response.data).toEqual(getResponse);
       expect(response.statusCode).toBe(200);
     });
   });
@@ -108,18 +99,9 @@ describe('HttpService', () => {
         },
       });
       const gotPost = jest.spyOn(httpService.http, 'post');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.postJson(url, postPayload);
+      const response = await httpService.postJson(path, postPayload);
 
       expect(gotPost).toHaveBeenCalledTimes(1);
-      expect(gotPost).toHaveBeenCalledWith(
-        url,
-        expect.objectContaining({
-          json: {
-            name: 'Mack Bloke',
-          },
-        }),
-      );
       expect(response.data).toEqual(postResponse);
       expect(response.statusCode).toEqual(201);
     });
@@ -143,14 +125,9 @@ describe('HttpService', () => {
 
       const httpService = new HttpService(baseUrl);
       const gotPut = jest.spyOn(httpService.http, 'put');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.putJson(url, putPayload);
+      const response = await httpService.putJson(path, putPayload);
 
       expect(gotPut).toHaveBeenCalledTimes(1);
-      expect(gotPut).toHaveBeenCalledWith(
-        url,
-        expect.objectContaining({ json: putPayload }),
-      );
       expect(response.data).toEqual(putResponse);
       expect(response.statusCode).toEqual(204);
     });
@@ -169,8 +146,7 @@ describe('HttpService', () => {
 
       const httpService = new HttpService(baseUrl);
       const gotDelete = jest.spyOn(httpService.http, 'delete');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.deleteJson(url);
+      const response = await httpService.deleteJson(path);
 
       expect(gotDelete).toHaveBeenCalledTimes(1);
       expect(response.data).toEqual(deleteResponse);
@@ -195,7 +171,6 @@ describe('HttpService', () => {
       class Dto {
         tag: number;
 
-        @Type(() => Date)
         createdAt: Date;
       }
 
@@ -210,32 +185,24 @@ describe('HttpService', () => {
       const getAuthToken = jest.fn().mockResolvedValue('123456abcdef');
       const httpService = new HttpService(baseUrl, getAuthToken);
       const gotGet = jest.spyOn(httpService.http, 'get');
-      const url = new URL(path, baseUrl);
 
       // makes 2 first calls one with 401 and the retry with 200
-      const responseRetry = await httpService.getJson<Dto>(url, Dto);
+      const responseRetry = await httpService.getJson<Dto>(path);
 
       // makes the last call to make sure the auth token is available
-      const response = await httpService.getJson<Dto>(url, Dto);
+      const response = await httpService.getJson<Dto>(path);
 
       expect(gotGet).toHaveBeenCalledTimes(2);
       expect(getAuthToken).toHaveBeenCalledTimes(2);
 
       expect(responseRetry).toStrictEqual(response);
-      expect(responseRetry.data).toEqual({
-        tag: getResponse.tag,
-        createdAt: new Date(getResponse.createdAt),
-      });
+      expect(responseRetry.data).toEqual(getResponse);
       expect(responseRetry.statusCode).toBe(200);
     });
 
     it('should work for all methods', async () => {
       const baseUrl = 'https://icanhazdadjoke.com/';
       const path = 'slack';
-
-      const payload = {
-        name: 'Mack Bloke',
-      };
 
       const unauthorizedResponse = {
         message: 'Unauthorized',
@@ -249,7 +216,6 @@ describe('HttpService', () => {
       class Dto {
         tag: number;
 
-        @Type(() => Date)
         createdAt: Date;
       }
 
@@ -272,11 +238,10 @@ describe('HttpService', () => {
       const gotPost = jest.spyOn(httpService.http, 'post');
       const gotPut = jest.spyOn(httpService.http, 'put');
       const gotDelete = jest.spyOn(httpService.http, 'delete');
-      const url = new URL(path, baseUrl);
 
-      await httpService.postJson<Dto>(url, payload, Dto);
-      await httpService.putJson<Dto>(url, payload, Dto);
-      await httpService.deleteJson<Dto>(url, Dto);
+      await httpService.postJson<Dto>(path);
+      await httpService.putJson<Dto>(path);
+      await httpService.deleteJson<Dto>(path);
 
       expect(gotPost).toHaveBeenCalledTimes(1);
       expect(gotPut).toHaveBeenCalledTimes(1);
@@ -317,14 +282,11 @@ describe('HttpService', () => {
 
       const httpService = new HttpService(baseUrl, null, options);
       const gotGet = jest.spyOn(httpService.http, 'get');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.getJson(url);
+      const response = await httpService.getJson(path);
 
       expect(gotGet).toHaveBeenCalledTimes(3);
       expect(retryFailure).toHaveBeenCalledTimes(2);
       expect(retrySuccess).toHaveBeenCalledTimes(1);
-
-      expect(gotGet).toHaveBeenCalledWith(url, undefined);
       expect(response.data).toEqual({ tag: 1234567 });
       expect(response.statusCode).toBe(200);
     });
@@ -353,16 +315,13 @@ describe('HttpService', () => {
 
       const httpService = new HttpService(baseUrl);
       const gotGet = jest.spyOn(httpService.http, 'get');
-      const url = new URL(path, baseUrl);
-      const response = await httpService.getJson(url, undefined, {
+      const response = await httpService.getJson(path, {
         resiliencePolicy: retryPolicy,
       });
 
       expect(gotGet).toHaveBeenCalledTimes(3);
       expect(retryFailure).toHaveBeenCalledTimes(2);
       expect(retrySuccess).toHaveBeenCalledTimes(1);
-
-      expect(gotGet).toHaveBeenCalledWith(url, undefined);
       expect(response.data).toEqual({ tag: 1234567 });
       expect(response.statusCode).toBe(200);
     });

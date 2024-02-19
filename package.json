@@ -1,6 +1,6 @@
 {
   "name": "@dbc-tech/http-kit",
-  "version": "1.4.9",
+  "version": "2.0.0",
   "description": "A Node.js package for managing HTTP client requests",
   "author": "Deep Blue Company",
   "license": "MIT",
@@ -17,11 +17,8 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "class-transformer": "^0.5.1",
     "cockatiel": "^3.1.1",
-    "got-cjs": "^12.3.1",
-    "reflect-metadata": "^0.1.13",
-    "winston": "^3.9.0"
+    "got-cjs": "^12.3.1"
   },
   "devDependencies": {
     "@golevelup/ts-jest": "^0.3.3",
